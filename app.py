@@ -6,8 +6,8 @@ from doc_generator import create_doc
 
 # ---------------- CONFIG ----------------
 # ⚠️ Hardcoded API keys (do not push to public repos with real keys!)
-GEMINI_API_KEY = "your_gemini_api_key_here"
-STABILITY_API_KEY = "your_stability_api_key_here"
+GEMINI_API_KEY = "AIzaSyBtah4ZmuiVkSrJABE8wIjiEgunGXAbT3Q"
+STABILITY_API_KEY = "sk-Z0tLgOIfS3pQlu4SbJEw5PdYAMl8ll02Dgx7yrifCAsPD20k"
 
 genai.configure(api_key=GEMINI_API_KEY)
 TEXT_MODEL = genai.GenerativeModel("gemini-1.5-flash")
@@ -182,4 +182,5 @@ if "outline" in st.session_state:
             mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
                  if mode=="ppt" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
+
 
