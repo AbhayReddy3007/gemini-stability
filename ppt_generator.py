@@ -1,0 +1,122 @@
+from pptx import Presentation
+from pptx.util import Pt, Inches
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE, MSO_VERTICAL_ANCHOR
+import re
+from PIL import Image
+import os
+
+def clean_title_text(title: str) -> str:
+    """Clean up titles for slides."""
+    if not title:
+        return "Presentation"
+    title = re.sub(r"\s+", " ", title.strip())  # collapse multiple spaces/newlines
+    return title
+
+def resize_image(image_path, max_width=800, max_height=600):
+    """Resize image to fit inside max_width × max_height (in pixels)."""
+    try:
+        img = Image.open(image_path)
+        img.thumbnail((max_width, max_height))  # maintain aspect ratio
+        resized_path = image_path.replace(".png", "_resized.png")
+        img.save(resized_path, "PNG")
+        return resized_path
+    except Exception as e:
+        print(f"⚠️ Could not resize image {image_path}: {e}")
+        return image_path
+
+def create_ppt(title, points, filename="output.pptx", images=None):
+    prs = Presentation()
+
+    # --- Brand Colors ---
+    PRIMARY_PURPLE = RGBColor(94, 42, 132)   # #5E2A84
+    SECONDARY_TEAL = RGBColor(0, 185, 163)   # #00B9A3
+    TEXT_DARK = RGBColor(40, 40, 40)         # dark gray
+    BG_LIGHT = RGBColor(244, 244, 244)       # light gray
+
+    # Clean the title
+    title = clean_title_text(title)
+
+    # --- Title Slide ---
+    slide_layout = prs.slide_layouts[5]  # blank layout
+    slide = prs.slides.add_slide(slide_layout)
+
+    fill = slide.background.fill
+    fill.solid()
+    fill.fore_color.rgb = PRIMARY_PURPLE
+
+    # Title TextBox
+    left, top, width, height = Inches(1), Inches(2), Inches(8), Inches(3)
+    textbox = slide.shapes.add_textbox(left, top, width, height)
+    tf = textbox.text_frame
+    tf.word_wrap = True
+    tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+    tf.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+
+    p = tf.add_paragraph()
+    p.text = title
+    p.font.size = Pt(40)
+    p.font.bold = True
+    p.font.color.rgb = RGBColor(255, 255, 255)
+    p.alignment = PP_ALIGN.CENTER
+
+    # --- Content Slides ---
+    for idx, item in enumerate(points, start=1):
+        key_point = clean_title_text(item.get("title", ""))
+        description = item.get("description", "")
+
+        slide = prs.slides.add_slide(prs.slide_layouts[5])
+
+        # Alternate background
+        bg_color = BG_LIGHT if idx % 2 == 0 else RGBColor(255, 255, 255)
+        fill = slide.background.fill
+        fill.solid()
+        fill.fore_color.rgb = bg_color
+
+        # Slide Title
+        left, top, width, height = Inches(0.8), Inches(0.5), Inches(8), Inches(1.5)
+        textbox = slide.shapes.add_textbox(left, top, width, height)
+        tf = textbox.text_frame
+        tf.word_wrap = True
+        tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+        tf.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+
+        p = tf.add_paragraph()
+        p.text = key_point
+        p.font.size = Pt(30)
+        p.font.bold = True
+        p.font.color.rgb = PRIMARY_PURPLE
+        p.alignment = PP_ALIGN.LEFT
+
+        # Accent underline
+        shape = slide.shapes.add_shape(
+            1, Inches(0.8), Inches(1.6), Inches(3), Inches(0.1)
+        )
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = SECONDARY_TEAL
+        shape.line.fill.background()
+
+        # Description bullets
+        if description:
+            left, top, width, height = Inches(1), Inches(2.2), Inches(5), Inches(4)
+            textbox = slide.shapes.add_textbox(left, top, width, height)
+            tf = textbox.text_frame
+            tf.word_wrap = True
+            for line in description.split("\n"):
+                if line.strip():
+                    bullet = tf.add_paragraph()
+                    bullet.text = line.strip()
+                    bullet.font.size = Pt(22)
+                    bullet.font.color.rgb = TEXT_DARK
+                    bullet.level = 0
+
+        # Add image (if available)
+        if images and idx - 1 < len(images) and images[idx - 1]:
+            try:
+                img_path = resize_image(images[idx - 1], max_width=800, max_height=600)
+                slide.shapes.add_picture(img_path, Inches(6), Inches(2.2), Inches(3.5), Inches(3))
+            except Exception as e:
+                print(f"⚠️ Could not add image to slide {idx}: {e}")
+
+    prs.save(filename)
+    return filename
