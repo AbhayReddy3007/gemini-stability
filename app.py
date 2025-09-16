@@ -101,8 +101,8 @@ def sanitize_filename(name: str) -> str:
     return re.sub(r'[^A-Za-z0-9_.-]', '_', name)
 
 # ---------------- STREAMLIT APP ----------------
-st.set_page_config(page_title="AI Productivity Suite", layout="wide")
-st.title("🤖 AI Productivity Suite")
+st.set_page_config(page_title="Chatbot", layout="wide")
+st.title("Chatbot")
 
 # Init state
 if "messages" not in st.session_state:
@@ -182,3 +182,4 @@ if "outline" in st.session_state:
             mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
                  if mode=="ppt" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
+
